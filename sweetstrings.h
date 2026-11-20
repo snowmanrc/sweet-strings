@@ -86,9 +86,15 @@ _sstring_len(const char* c) {
     return len;
 }
 
+static inline 
+int32_t _sstring_max(int32_t a, int32_t b) {
+    return (a > b) ? a : b;
+}
 
 static inline sstring
 sstring_new(const char* c) {
+	assert(c && "SweetStrings: NULL c-string");
+
     uint32_t len = _sstring_len(c);
     sstring s = {};
     sstring_reserve(&s, len);
@@ -100,6 +106,8 @@ sstring_new(const char* c) {
 
 static inline sstring 
 sstring_newl(const char* c, uint32_t l) {
+	assert(c && "SweetStrings: NULL c string");
+
     sstring s = {};
     sstring_reserve(&s, l);
     s.len = l;
@@ -109,13 +117,15 @@ sstring_newl(const char* c, uint32_t l) {
 
 
 static inline sstring sstring_copy(const sstring* s) {
+	assert(s && "SweetStrings: NULL string");
+
 	return sstring_newl(s->data, s->len);
 }
 
 
 static inline void
 sstring_del(sstring* s) {
-    if (!s) return;
+	assert(s && "SweetStrings: NULL string");
 
     if (s->data) {
         free(s->data);
@@ -127,6 +137,8 @@ sstring_del(sstring* s) {
 
 static inline void
 sstring_reserve(sstring* s, uint32_t c) {
+	assert(s && "SweetStrings: NULL string");
+
     if (s->cap >= c) return;
     char* data = (char*) realloc(s->data, c);
 
@@ -138,6 +150,8 @@ sstring_reserve(sstring* s, uint32_t c) {
 
 static inline void
 sstring_resize(sstring* s, uint32_t l) {
+	assert(s && "SweetStrings: NULL string");
+
     if (l == s->len) return;
 
     if (l < s->len) {
@@ -156,18 +170,24 @@ sstring_resize(sstring* s, uint32_t l) {
 
 static inline uint32_t
 sstring_len(const sstring* s) {
+	assert(s && "SweetStrings: NULL string");
+
     return s->len;
 }
 
 
 static inline uint32_t
 sstring_cap(const sstring* s) {
+	assert(s && "SweetStrings: NULL string");
+
     return s->cap;
 }
 
 
 static inline const char*
 sstring_cstr(sstring* s) {
+	assert(s && "SweetStrings: NULL string");
+
     sstring_reserve(s, s->len + 1);
     s->data[s->len] = '\0';
     return s->data;
@@ -176,23 +196,30 @@ sstring_cstr(sstring* s) {
 
 static inline char
 sstring_get(const sstring* s, uint32_t i) {
+	assert(s && "SweetStrings: NULL string");
     assert(i < s->len && "SweetStrings: Out of bounds access");
+
     return s->data[i];
 }
 
 
 static inline void
 sstring_set(sstring* s, uint32_t i, char c) {
+	assert(s && "SweetStrings: NULL string");
     assert(i < s->len && "SweetStrings: Out of bounds access");
+
     s->data[i] = c;
 }
 
 
 static inline void 
 sstring_push(sstring* s, char c) {
+	assert(s && "SweetStrings: NULL string");
+
 	if(s->len >= s->cap) {
-		s->cap = _sstring_growth_factor(s->cap);
-		sstring_reserve(s, s->cap);
+		uint32_t cap = _sstring_growth_factor(s->cap);
+		sstring_reserve(s, cap);
+		s->cap = cap;
 	}
 	s->data[s->len++] = c;
 }
@@ -200,17 +227,23 @@ sstring_push(sstring* s, char c) {
 
 static inline char 
 sstring_pop(sstring* s) {
+	assert(s && "SweetStrings: NULL string");
 	assert(s->len > 0 && "SweetStrings: Empty string, can not pop.");
+
 	return s->data[--s->len];
 }
 
 
 static inline void 
 sstring_append(sstring* s, const char* c) {
+	assert(s && "SweetStrings: NULL string");
+	assert(c && "SweetStrings: NULL c string");
+
 	uint32_t len = _sstring_len(c);
-	if(s->len >= s->cap) {
-		s->cap = _sstring_growth_factor(s->cap) + len;
-		sstring_reserve(s, s->cap);
+	if(s->len + len >= s->cap) {
+		int32_t cap = _sstring_max(_sstring_growth_factor(s->cap), len);
+		sstring_reserve(s, cap);
+		s->cap = cap;
 	}
 
 	memcpy(s->data + s->len, c, len);
@@ -218,10 +251,15 @@ sstring_append(sstring* s, const char* c) {
 }
 
 
-static inline void sstring_appendl(sstring* s, const char* c, uint32_t l) {
-	if(s->len >= s->cap) {
-		s->cap = _sstring_growth_factor(s->cap) + l;
-		sstring_reserve(s, s->cap);
+static inline void 
+sstring_appendl(sstring* s, const char* c, uint32_t l) {
+	assert(s && "SweetStrings: NULL string");
+	assert(c && "SweetStrings: NULL c string");
+
+	if(s->len + l >= s->cap) {
+		int32_t cap = _sstring_max(_sstring_growth_factor(s->cap), l);
+		sstring_reserve(s, cap);
+		s->cap = cap;
 	}
 
 	memcpy(s->data + s->len, c, l);
@@ -231,6 +269,8 @@ static inline void sstring_appendl(sstring* s, const char* c, uint32_t l) {
 
 static inline void
 sstring_clear(sstring* s) {
+	assert(s && "SweetStrings: NULL string");
+
     if (s->len > 0) s->data[0] = '\0';
     s->len = 0;
 }
@@ -238,12 +278,16 @@ sstring_clear(sstring* s) {
 
 static inline void
 sstring_fill(sstring* s, char c) {
+	assert(s && "SweetStrings: NULL string");
+
     memset(s->data, c, s->len);
 }
 
 
 static inline bool
 sstring_isempty(const sstring* s) {
+	assert(s && "SweetStrings: NULL string");
+	
     return s->len == 0;
 }
 
