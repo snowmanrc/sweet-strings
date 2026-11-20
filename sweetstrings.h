@@ -61,9 +61,12 @@ static inline void sstring_push(sstring* s, char c);
 static inline char sstring_pop(sstring* s);
 
 // Appends a string to end.
-static inline void sstring_append(sstring* s, const char* c);
+static inline void sstring_append(sstring* s, const sstring* o);
 
-// Appends a string to end. Takes its length for faster appending.
+// Appends a cstring to end. Takes its length for faster appending.
+static inline void sstring_appendc(sstring* s, const char* c);
+
+// Appends a cstring to end. Takes its length for faster appending.
 static inline void sstring_appendl(sstring* s, const char* c, uint32_t l);
 
 // Clears the data of the string, resetting length to 0.
@@ -235,19 +238,19 @@ sstring_pop(sstring* s) {
 
 
 static inline void 
-sstring_append(sstring* s, const char* c) {
+sstring_append(sstring* s, const sstring* o) {
+	assert(s && "SweetStrings: NULL string");
+	
+	sstring_appendl(s, o->data, o->len);
+}
+
+static inline void 
+sstring_appendc(sstring* s, const char* c) {
 	assert(s && "SweetStrings: NULL string");
 	assert(c && "SweetStrings: NULL c string");
 
 	uint32_t len = _sstring_len(c);
-	if(s->len + len >= s->cap) {
-		int32_t cap = _sstring_max(_sstring_growth_factor(s->cap), len);
-		sstring_reserve(s, cap);
-		s->cap = cap;
-	}
-
-	memcpy(s->data + s->len, c, len);
-	s->len += len;
+	sstring_appendl(s, c, len);
 }
 
 
@@ -287,7 +290,7 @@ sstring_fill(sstring* s, char c) {
 static inline bool
 sstring_isempty(const sstring* s) {
 	assert(s && "SweetStrings: NULL string");
-	
+
     return s->len == 0;
 }
 
