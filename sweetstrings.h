@@ -60,6 +60,12 @@ static inline void sstring_push(sstring* s, char c);
 // Pops a character from the end of the string.
 static inline char sstring_pop(sstring* s);
 
+// Appends a string to end.
+static inline void sstring_append(sstring* s, const char* c);
+
+// Appends a string to end. Takes its length for faster appending.
+static inline void sstring_appendl(sstring* s, const char* c, uint32_t l);
+
 // Clears the data of the string, resetting length to 0.
 static inline void sstring_clear(sstring* s);
 
@@ -192,9 +198,34 @@ sstring_push(sstring* s, char c) {
 }
 
 
-static inline char sstring_pop(sstring* s) {
+static inline char 
+sstring_pop(sstring* s) {
 	assert(s->len > 0 && "SweetStrings: Empty string, can not pop.");
 	return s->data[--s->len];
+}
+
+
+static inline void 
+sstring_append(sstring* s, const char* c) {
+	uint32_t len = _sstring_len(c);
+	if(s->len >= s->cap) {
+		s->cap = _sstring_growth_factor(s->cap) + len;
+		sstring_reserve(s, s->cap);
+	}
+
+	memcpy(s->data + s->len, c, len);
+	s->len += len;
+}
+
+
+static inline void sstring_appendl(sstring* s, const char* c, uint32_t l) {
+	if(s->len >= s->cap) {
+		s->cap = _sstring_growth_factor(s->cap) + l;
+		sstring_reserve(s, s->cap);
+	}
+
+	memcpy(s->data + s->len, c, l);
+	s->len += l;
 }
 
 
